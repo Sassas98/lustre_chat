@@ -1,1 +1,1 @@
-gleam run -m lustre/dev start
+code .&&gleam run -m lustre/dev start

@@ -9,7 +9,7 @@ pub type Page {
   LoginPage
   MenuPage
   SearchPage
-  ChatPage
+  ChatPage(String)
 }
 
 pub type Msg {
@@ -19,12 +19,29 @@ pub type Msg {
   SendMessage(Message)
   MessageSended(Result(List(Message), Error))
   ChangePage(Page)
-  ReceiveNewMessage(Result(List(Message), Error))
+  ReceiveNewMessage(Result(List(Message), Error), Bool)
   MessageRequest
+  SearchUsername(String)
+  HandleUsernamesReturn(Result(List(String), Error))
+  InputUsername(String)
+  InputPassword(String)
+  InputSearch(String)
+  InputChat(String)
 }
 
 pub type Model {
-  Model(profile: Profile, page: Page, chats: List(Chat))
+  Model(
+    profile: Profile,
+    page: Page,
+    chats: List(Chat),
+    search_chat: List(String),
+    in_loading: Bool,
+    input: Input,
+  )
+}
+
+pub type Input {
+  Input(username: String, password: String, search: String, chat: String)
 }
 
 pub type Profile {

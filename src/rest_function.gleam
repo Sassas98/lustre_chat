@@ -88,7 +88,7 @@ pub fn update_msgs(model: types.Model, msgs: List(types.Message)) -> types.Model
       types.Chat(k, list.flat_map(v, fn(x) { x.messages }))
     })
     |> dict.values
-  types.Model(..model, chats: chats)
+  types.Model(..model, chats: chats, in_loading: False)
 }
 
 @external(javascript, "./app.ffi.mjs", "set_timeout")
@@ -123,7 +123,23 @@ pub fn get_messages(profile: types.Profile, only_new: Bool) -> Effect(types.Msg)
     }
     <> "&onlyNew="
     <> bool.to_string(only_new)
-  let handler = rsvp.expect_json(decode.list(decoder), types.ReceiveNewMessage)
+  let handler =
+    rsvp.expect_json(decode.list(decoder), fn(msgs) {
+      types.ReceiveNewMessage(msgs, only_new)
+    })
+  case profile {
+    types.LoggedUser(_, _) -> rsvp.get(url, handler)
+    _ -> effect.none()
+  }
+}
+
+pub fn search_username(s: String) -> Effect(types.Msg) {
+  let decoder = {
+    use text <- decode.field("usernames", decode.list(decode.string))
+    decode.success(text)
+  }
+  let url = "http://www.url.com?search?username=" <> s
+  let handler = rsvp.expect_json(decoder, types.HandleUsernamesReturn)
 
   rsvp.get(url, handler)
 }
