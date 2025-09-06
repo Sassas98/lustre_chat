@@ -14,8 +14,10 @@ pub type Page {
 
 pub type Msg {
   UserLogin(LoginModel)
+  LoginSubmit(Result(Profile, Error))
   UserLogout
   SendMessage(Message)
+  MessageSended(Result(List(Message), Error))
   ChangePage(Page)
   ReceiveNewMessage(Result(List(Message), Error))
   MessageRequest
@@ -26,11 +28,7 @@ pub type Model {
 }
 
 pub type Profile {
-  Profile(username: String, token: String, state: UserState)
-}
-
-pub type UserState {
-  Logged
+  LoggedUser(username: String, token: String)
   Unlogged
 }
 
@@ -39,12 +37,5 @@ pub type Chat {
 }
 
 pub type Message {
-  Message(
-    time: Time,
-    text: String,
-    link: String,
-    from: String,
-    to: String,
-    read: Bool,
-  )
+  Message(time: Time, text: String, from: String, to: String, read: Bool)
 }
