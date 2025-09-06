@@ -1,20 +1,23 @@
-import login.{login_view}
+import component/button
+import fun
+import gleam/string
 import lustre
 import lustre/attribute
 import lustre/effect.{type Effect}
 import lustre/element.{type Element}
 import lustre/element/html
-import rest_function
+import page/login.{login_view}
+import page/registration.{registration_view}
 import types
 
 pub fn main() {
   let app = lustre.application(init, update, view)
-  let assert Ok(_) = lustre.start(app, "#app", Nil)
+  let assert Ok(_) = lustre.start(app, "#app", "dev")
 
   Nil
 }
 
-fn init(_args) -> #(types.Model, Effect(types.Msg)) {
+fn init(env: String) -> #(types.Model, Effect(types.Msg)) {
   let model =
     types.Model(
       profile: types.Unlogged,
@@ -23,8 +26,10 @@ fn init(_args) -> #(types.Model, Effect(types.Msg)) {
       search_chat: [],
       in_loading: False,
       input: types.Input("", "", "", ""),
+      env:,
+      error: "",
     )
-  #(model, rest_function.tick())
+  #(model, fun.tick())
 }
 
 fn update(
@@ -32,9 +37,13 @@ fn update(
   msg: types.Msg,
 ) -> #(types.Model, Effect(types.Msg)) {
   case msg {
+    types.UserRegistration(m) -> #(
+      types.Model(..model, in_loading: True),
+      fun.submit_registration(model.env, m),
+    )
     types.UserLogin(m) -> #(
       types.Model(..model, in_loading: True),
-      rest_function.submit_login(m),
+      fun.submit_login(model.env, m),
     )
     types.LoginSubmit(Ok(p)) ->
       case p {
@@ -44,37 +53,41 @@ fn update(
             profile: p,
             page: types.MenuPage,
             in_loading: False,
+            input: types.Input("", "", "", ""),
           ),
-          rest_function.get_messages(model.profile, False),
+          fun.get_messages(model.profile, model.env, False),
         )
         types.Unlogged -> #(model, effect.none())
       }
-    types.UserLogout -> init(0)
+    types.UserLogout -> init(model.env)
     types.SendMessage(msg) -> #(
-      types.Model(..model, in_loading: True),
-      rest_function.send_message(model.profile, msg),
+      types.Model(..model, in_loading: True, input: types.Input("", "", "", "")),
+      fun.send_message(model.profile, model.env, msg),
     )
-    types.ChangePage(p) -> #(types.Model(..model, page: p), effect.none())
+    types.ChangePage(p) -> #(
+      types.Model(..model, page: p, input: types.Input("", "", "", "")),
+      effect.none(),
+    )
     types.ReceiveNewMessage(Ok(msg), continue) -> #(
-      rest_function.update_msgs(model, msg),
+      fun.update_msgs(model, msg),
       case continue {
-        True -> rest_function.tick()
+        True -> fun.tick()
         False -> effect.none()
       },
     )
-    types.ReceiveNewMessage(Error(_), continue) -> #(
-      types.Model(..model, in_loading: False),
+    types.ReceiveNewMessage(Error(e), continue) -> #(
+      types.Model(..model, in_loading: False, error: string.inspect(e)),
       case continue {
-        True -> rest_function.tick()
+        True -> fun.tick()
         False -> effect.none()
       },
     )
     types.MessageRequest -> #(
       types.Model(..model, in_loading: True),
-      rest_function.get_messages(model.profile, True),
+      fun.get_messages(model.profile, model.env, True),
     )
     types.MessageSended(Ok(msgs)) -> #(
-      rest_function.update_msgs(model, msgs),
+      fun.update_msgs(model, msgs),
       effect.none(),
     )
     types.HandleUsernamesReturn(Ok(list)) -> #(
@@ -83,43 +96,87 @@ fn update(
     )
     types.SearchUsername(s) -> #(
       types.Model(..model, in_loading: False),
-      rest_function.search_username(s),
+      fun.search_username(model.env, s),
     )
-    types.InputUsername(s) -> #(
-      types.Model(..model, input: types.Input(..model.input, username: s)),
+    types.InputEvent(s, t) -> #(
+      case t {
+        types.InputChat ->
+          types.Model(..model, input: types.Input(..model.input, chat: s))
+        types.InputPassword ->
+          types.Model(..model, input: types.Input(..model.input, password: s))
+        types.InputSearch ->
+          types.Model(..model, input: types.Input(..model.input, search: s))
+        types.InputUsername ->
+          types.Model(..model, input: types.Input(..model.input, username: s))
+      },
       effect.none(),
     )
-    types.InputPassword(s) -> #(
-      types.Model(..model, input: types.Input(..model.input, password: s)),
+    types.RegistrationSubmit(Ok(True)) -> #(
+      types.Model(
+        ..model,
+        in_loading: False,
+        input: types.Input("", "", "", ""),
+      ),
       effect.none(),
     )
-    types.InputSearch(s) -> #(
-      types.Model(..model, input: types.Input(..model.input, search: s)),
+    types.HandleUsernamesReturn(Error(e)) -> #(
+      types.Model(..model, in_loading: False, error: string.inspect(e)),
       effect.none(),
     )
-    types.InputChat(s) -> #(
-      types.Model(..model, input: types.Input(..model.input, chat: s)),
+    types.LoginSubmit(Error(e)) -> #(
+      types.Model(..model, in_loading: False, error: string.inspect(e)),
       effect.none(),
     )
-    _ -> #(types.Model(..model, in_loading: False), effect.none())
-    // x gli errori
+    types.MessageSended(Error(e)) -> #(
+      types.Model(..model, in_loading: False, error: string.inspect(e)),
+      effect.none(),
+    )
+    types.RegistrationSubmit(Error(e)) -> #(
+      types.Model(..model, in_loading: False, error: string.inspect(e)),
+      effect.none(),
+    )
+    types.RegistrationSubmit(Ok(False)) -> #(
+      types.Model(
+        ..model,
+        in_loading: False,
+        error: "Username inserito già presente",
+      ),
+      effect.none(),
+    )
+    types.ErrorAccept -> #(types.Model(..model, error: ""), effect.none())
   }
 }
 
 fn view(model: types.Model) -> Element(types.Msg) {
-  html.div(
-    [
-      attribute.class(
-        "bg-gradient-to-b from-slate-500 to-slate-800 md:p-4 text-white h-[100vh] overflow-auto flex justify-center font-mono",
-      ),
-    ],
-    [
-      html.div([], [
-        case model.page {
-          types.LoginPage -> login_view(model)
-          _ -> html.span([], [html.text("Test")])
-        },
-      ]),
-    ],
-  )
+  case model.error {
+    "" ->
+      html.div(
+        [
+          attribute.class(
+            "bg-gradient-to-b from-slate-500 to-slate-800 md:p-4 text-white h-[100vh] overflow-auto flex justify-center font-mono",
+          ),
+        ],
+        [
+          html.div([], [
+            case model.page {
+              types.LoginPage -> login_view(model)
+              types.RegisterPage -> registration_view(model)
+              _ -> html.span([], [html.text("Test")])
+            },
+          ]),
+        ],
+      )
+    ex ->
+      html.div(
+        [
+          attribute.class(
+            "bg-black text-red-500 text-4xl h-[100vh] flex justify-center items-center font-mono flex-col gap-10",
+          ),
+        ],
+        [
+          html.span([], [html.text("Si è verificato un errore: " <> ex)]),
+          button.danger_btn(types.ErrorAccept, "Chiudi"),
+        ],
+      )
+  }
 }

@@ -8,14 +8,43 @@ import lustre/effect.{type Effect}
 import rsvp
 import types
 
-pub fn submit_login(lm: types.LoginModel) -> Effect(types.Msg) {
+fn get_url(env: String) {
+  case env {
+    "dev" -> "http://localhost:8001/api/v1/"
+    _ -> "/api/v1/"
+  }
+}
+
+pub fn submit_registration(
+  env: String,
+  lm: types.LoginModel,
+) -> Effect(types.Msg) {
   let body =
     json.object([
       #("username", json.string(lm.username)),
       #("password", json.string(lm.password)),
     ])
 
-  let url = "http://www.url.com/login"
+  let url = get_url(env) <> "registration"
+
+  let decoder = {
+    use success <- decode.field("success", decode.bool)
+    decode.success(success)
+  }
+
+  let handler = rsvp.expect_json(decoder, types.RegistrationSubmit)
+
+  rsvp.post(url, body, handler)
+}
+
+pub fn submit_login(env: String, lm: types.LoginModel) -> Effect(types.Msg) {
+  let body =
+    json.object([
+      #("username", json.string(lm.username)),
+      #("password", json.string(lm.password)),
+    ])
+
+  let url = get_url(env) <> "login"
 
   let decoder = {
     use success <- decode.field("success", decode.bool)
@@ -34,6 +63,7 @@ pub fn submit_login(lm: types.LoginModel) -> Effect(types.Msg) {
 
 pub fn send_message(
   profile: types.Profile,
+  env: String,
   msg: types.Message,
 ) -> Effect(types.Msg) {
   let body =
@@ -52,7 +82,7 @@ pub fn send_message(
       #("time", json.string(birl.to_iso8601(msg.time))),
     ])
 
-  let url = "http://www.url.com/send"
+  let url = get_url(env) <> "send"
 
   let decoder = {
     use success <- decode.field("success", decode.bool)
@@ -103,7 +133,11 @@ pub fn tick() -> Effect(types.Msg) {
   dispatch(types.MessageRequest)
 }
 
-pub fn get_messages(profile: types.Profile, only_new: Bool) -> Effect(types.Msg) {
+pub fn get_messages(
+  profile: types.Profile,
+  env: String,
+  only_new: Bool,
+) -> Effect(types.Msg) {
   let decoder = {
     use time_str <- decode.field("time", decode.string)
     use text <- decode.field("text", decode.string)
@@ -116,7 +150,8 @@ pub fn get_messages(profile: types.Profile, only_new: Bool) -> Effect(types.Msg)
     }
   }
   let url =
-    "http://www.url.com?token="
+    get_url(env)
+    <> "get?token="
     <> case profile {
       types.LoggedUser(_, token: token) -> token
       _ -> ""
@@ -133,12 +168,12 @@ pub fn get_messages(profile: types.Profile, only_new: Bool) -> Effect(types.Msg)
   }
 }
 
-pub fn search_username(s: String) -> Effect(types.Msg) {
+pub fn search_username(env: String, s: String) -> Effect(types.Msg) {
   let decoder = {
     use text <- decode.field("usernames", decode.list(decode.string))
     decode.success(text)
   }
-  let url = "http://www.url.com?search?username=" <> s
+  let url = get_url(env) <> "search?username=" <> s
   let handler = rsvp.expect_json(decoder, types.HandleUsernamesReturn)
 
   rsvp.get(url, handler)

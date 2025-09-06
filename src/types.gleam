@@ -7,6 +7,7 @@ pub type LoginModel {
 
 pub type Page {
   LoginPage
+  RegisterPage
   MenuPage
   SearchPage
   ChatPage(String)
@@ -14,7 +15,9 @@ pub type Page {
 
 pub type Msg {
   UserLogin(LoginModel)
+  UserRegistration(LoginModel)
   LoginSubmit(Result(Profile, Error))
+  RegistrationSubmit(Result(Bool, Error))
   UserLogout
   SendMessage(Message)
   MessageSended(Result(List(Message), Error))
@@ -23,10 +26,15 @@ pub type Msg {
   MessageRequest
   SearchUsername(String)
   HandleUsernamesReturn(Result(List(String), Error))
-  InputUsername(String)
-  InputPassword(String)
-  InputSearch(String)
-  InputChat(String)
+  InputEvent(String, InputType)
+  ErrorAccept
+}
+
+pub type InputType {
+  InputUsername
+  InputPassword
+  InputSearch
+  InputChat
 }
 
 pub type Model {
@@ -37,6 +45,8 @@ pub type Model {
     search_chat: List(String),
     in_loading: Bool,
     input: Input,
+    env: String,
+    error: String,
   )
 }
 
