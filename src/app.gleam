@@ -1,13 +1,17 @@
 import component/button
 import fun
+import gleam/bool
 import gleam/string
 import lustre
 import lustre/attribute
 import lustre/effect.{type Effect}
 import lustre/element.{type Element}
 import lustre/element/html
+import page/chat.{chat_view}
 import page/login.{login_view}
+import page/menu_page.{menu_view}
 import page/registration.{registration_view}
+import page/search.{search_view}
 import types
 
 pub fn main() {
@@ -52,12 +56,15 @@ fn update(
             ..model,
             profile: p,
             page: types.MenuPage,
-            in_loading: False,
+            in_loading: True,
             input: types.Input("", "", "", ""),
           ),
-          fun.get_messages(model.profile, model.env, False),
+          fun.get_messages(p, model.env, False),
         )
-        types.Unlogged -> #(model, effect.none())
+        types.Unlogged -> #(
+          types.Model(..model, error: "Login fallito"),
+          effect.none(),
+        )
       }
     types.UserLogout -> init(model.env)
     types.SendMessage(msg) -> #(
@@ -83,7 +90,7 @@ fn update(
       },
     )
     types.MessageRequest -> #(
-      types.Model(..model, in_loading: True),
+      model,
       fun.get_messages(model.profile, model.env, True),
     )
     types.MessageSended(Ok(msgs)) -> #(
@@ -95,7 +102,7 @@ fn update(
       effect.none(),
     )
     types.SearchUsername(s) -> #(
-      types.Model(..model, in_loading: False),
+      types.Model(..model, in_loading: True),
       fun.search_username(model.env, s),
     )
     types.InputEvent(s, t) -> #(
@@ -116,6 +123,7 @@ fn update(
         ..model,
         in_loading: False,
         input: types.Input("", "", "", ""),
+        page: types.LoginPage,
       ),
       effect.none(),
     )
@@ -144,6 +152,7 @@ fn update(
       effect.none(),
     )
     types.ErrorAccept -> #(types.Model(..model, error: ""), effect.none())
+    types.StopLoading -> #(types.Model(..model, in_loading: False), fun.tick())
   }
 }
 
@@ -153,15 +162,33 @@ fn view(model: types.Model) -> Element(types.Msg) {
       html.div(
         [
           attribute.class(
-            "bg-gradient-to-b from-slate-500 to-slate-800 md:p-4 text-white h-[100vh] overflow-auto flex justify-center font-mono",
+            "bg-gradient-to-b from-slate-500 to-slate-800 text-white h-[100vh] overflow-auto flex justify-center font-mono",
           ),
         ],
         [
-          html.div([], [
+          html.div(
+            [
+              attribute.data("show", bool.to_string(model.in_loading)),
+              attribute.class(
+                "data-[show=False]:hidden absolute bg-slate-800/70 w-[100vw] h-[100vh] flex justify-center z-10 items-center cursor-wait",
+              ),
+            ],
+            [
+              html.div(
+                [
+                  attribute.class("loader"),
+                ],
+                [],
+              ),
+            ],
+          ),
+          html.div([attribute.class("")], [
             case model.page {
               types.LoginPage -> login_view(model)
               types.RegisterPage -> registration_view(model)
-              _ -> html.span([], [html.text("Test")])
+              types.ChatPage(u) -> chat_view(model, u)
+              types.MenuPage -> menu_view(model)
+              types.SearchPage -> search_view(model)
             },
           ]),
         ],
@@ -170,7 +197,7 @@ fn view(model: types.Model) -> Element(types.Msg) {
       html.div(
         [
           attribute.class(
-            "bg-black text-red-500 text-4xl h-[100vh] flex justify-center items-center font-mono flex-col gap-10",
+            "bg-black text-red-500 text-lg px-4 md:text-4xl h-[100vh] flex justify-center items-center font-mono flex-col gap-10",
           ),
         ],
         [

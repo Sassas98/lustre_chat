@@ -28,6 +28,7 @@ pub type Msg {
   HandleUsernamesReturn(Result(List(String), Error))
   InputEvent(String, InputType)
   ErrorAccept
+  StopLoading
 }
 
 pub type InputType {

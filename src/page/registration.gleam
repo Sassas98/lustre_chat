@@ -15,7 +15,7 @@ pub fn registration_view(model: types.Model) -> Element(types.Msg) {
       "md:w-[50%] md:mx-[25%]",
       model.input.username,
     ),
-    input.text_input(
+    input.password_input(
       "Password",
       types.InputPassword,
       "md:w-[50%] md:mx-[25%]",

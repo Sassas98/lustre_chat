@@ -10,6 +10,15 @@ fn input(
   div_wind: String,
   value: String,
 ) {
+  html.div([attribute.class(div_wind)], [
+    html.label([attribute.class("text-lg")], [
+      html.text(label),
+    ]),
+    only_input(tipology, action, value),
+  ])
+}
+
+fn only_input(tipology: String, action: fn(String) -> types.Msg, value: String) {
   let input_class =
     " w-[100%]
     rounded-xl
@@ -25,17 +34,16 @@ fn input(
     focus:shadow-[0_0_12px_2px_rgba(139,92,246,0.6)]
     focus:outline-none
     transition"
-  html.div([attribute.class(div_wind)], [
-    html.label([attribute.class("text-lg")], [
-      html.text(label),
-    ]),
-    html.input([
-      attribute.type_(tipology),
-      event.on_input(action),
-      attribute.class(input_class),
-      attribute.value(value),
-    ]),
+  html.input([
+    attribute.type_(tipology),
+    event.on_input(action),
+    attribute.class(input_class),
+    attribute.value(value),
   ])
+}
+
+pub fn only_text_input(input_type: types.InputType, value: String) {
+  only_input("text", fn(x) { types.InputEvent(x, input_type) }, value)
 }
 
 pub fn text_input(

@@ -4,13 +4,14 @@ import gleam/dict
 import gleam/dynamic/decode
 import gleam/json
 import gleam/list
+import gleam/set
 import lustre/effect.{type Effect}
 import rsvp
 import types
 
 fn get_url(env: String) {
   case env {
-    "dev" -> "http://localhost:8001/api/v1/"
+    "dev" -> "https://localhost:7174/api/v1/chat/"
     _ -> "/api/v1/"
   }
 }
@@ -78,8 +79,6 @@ pub fn send_message(
       #("text", json.string(msg.text)),
       #("from", json.string(msg.from)),
       #("to", json.string(msg.to)),
-      #("read", json.bool(msg.read)),
-      #("time", json.string(birl.to_iso8601(msg.time))),
     ])
 
   let url = get_url(env) <> "send"
@@ -115,7 +114,14 @@ pub fn update_msgs(model: types.Model, msgs: List(types.Message)) -> types.Model
     |> list.append(model.chats)
     |> list.group(fn(c) { c.with })
     |> dict.map_values(fn(k, v) {
-      types.Chat(k, list.flat_map(v, fn(x) { x.messages }))
+      types.Chat(
+        k,
+        v
+          |> list.flat_map(fn(x) { x.messages })
+          |> set.from_list
+          |> set.to_list
+          |> list.sort(fn(a, b) { birl.compare(a.time, b.time) }),
+      )
     })
     |> dict.values
   types.Model(..model, chats: chats, in_loading: False)
@@ -164,7 +170,7 @@ pub fn get_messages(
     })
   case profile {
     types.LoggedUser(_, _) -> rsvp.get(url, handler)
-    _ -> effect.none()
+    _ -> effect.from(fn(dispatch) { dispatch(types.StopLoading) })
   }
 }
 
