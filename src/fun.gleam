@@ -2,7 +2,6 @@ import birl
 import gleam/bool
 import gleam/dict
 import gleam/dynamic/decode
-import gleam/io
 import gleam/json
 import gleam/list
 import gleam/set
@@ -15,7 +14,6 @@ import types
 
 pub fn format_dt(dt: birl.Time) -> String {
   let iso = birl.to_iso8601(dt)
-  io.print(iso)
   let pair = case string.split(iso, "T") {
     [a, b] -> #(a, b)
     _ -> #("", "")
@@ -26,6 +24,7 @@ pub fn format_dt(dt: birl.Time) -> String {
   }
   let time = case string.split(pair.1, ":") {
     [a, b, _, _] -> #(a, b)
+    [a, b, _] -> #(a, b)
     _ -> #("", "")
   }
 
