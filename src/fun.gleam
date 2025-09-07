@@ -12,7 +12,7 @@ import types
 fn get_url(env: String) {
   case env {
     "dev" -> "https://localhost:7174/api/v1/chat/"
-    _ -> "/api/v1/"
+    _ -> "/api/v1/chat/"
   }
 }
 

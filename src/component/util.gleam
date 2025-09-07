@@ -1,7 +1,6 @@
 import lustre/attribute
 import lustre/element.{type Element}
 import lustre/element/html
-import lustre/event
 import types
 
 pub fn card(body: List(Element(types.Msg))) {
