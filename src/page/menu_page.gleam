@@ -38,7 +38,12 @@ pub fn menu_view(model: types.Model) -> Element(types.Msg) {
           html.div(
             [
               attribute.class(
-                "p-2 cursor-pointer text-center text-xl font-bold bg-white/70 hover:bg-black hover:text-white rounded-full mx-[10%] md:mx-[25%] transition-all ease-in duration-200",
+                "p-2 cursor-pointer font-bold text-center text-xl rounded-full mx-[10%] md:mx-[25%] transition-all ease-in duration-200 "
+                <> case c.has_new {
+                  True ->
+                    "text-black bg-yellow-300/70 hover:bg-black hover:text-yellow-300"
+                  False -> "text-black bg-white hover:bg-black hover:text-white"
+                },
               ),
               event.on_click(types.ChangePage(types.ChatPage(c.with))),
             ],

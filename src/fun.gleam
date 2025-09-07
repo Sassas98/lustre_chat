@@ -2,12 +2,35 @@ import birl
 import gleam/bool
 import gleam/dict
 import gleam/dynamic/decode
+import gleam/io
 import gleam/json
 import gleam/list
 import gleam/set
+import gleam/string
 import lustre/effect.{type Effect}
+import plinth/browser/document
+import plinth/browser/element
 import rsvp
 import types
+
+pub fn format_dt(dt: birl.Time) -> String {
+  let iso = birl.to_iso8601(dt)
+  io.print(iso)
+  let pair = case string.split(iso, "T") {
+    [a, b] -> #(a, b)
+    _ -> #("", "")
+  }
+  let date = case string.split(pair.0, "-") {
+    [_, b, c] -> #(c, b)
+    _ -> #("", "")
+  }
+  let time = case string.split(pair.1, ":") {
+    [a, b, _, _] -> #(a, b)
+    _ -> #("", "")
+  }
+
+  string.concat([time.0, ":", time.1, " ", date.0, "/", date.1])
+}
 
 fn get_url(env: String) {
   case env {
@@ -86,7 +109,7 @@ pub fn send_message(
   let decoder = {
     use success <- decode.field("success", decode.bool)
     decode.success(case success {
-      True -> [msg]
+      True -> [types.Message(..msg, read: True)]
       False -> []
     })
   }
@@ -109,7 +132,9 @@ pub fn update_msgs(model: types.Model, msgs: List(types.Message)) -> types.Model
         _ -> m.from
       }
     })
-    |> dict.map_values(fn(k, v) { types.Chat(k, v) })
+    |> dict.map_values(fn(k, v) {
+      types.Chat(k, v |> list.any(fn(m) { !m.read }), v)
+    })
     |> dict.values
     |> list.append(model.chats)
     |> list.group(fn(c) { c.with })
@@ -118,12 +143,16 @@ pub fn update_msgs(model: types.Model, msgs: List(types.Message)) -> types.Model
         k,
         v
           |> list.flat_map(fn(x) { x.messages })
+          |> list.any(fn(m) { !m.read }),
+        v
+          |> list.flat_map(fn(x) { x.messages })
           |> set.from_list
           |> set.to_list
           |> list.sort(fn(a, b) { birl.compare(a.time, b.time) }),
       )
     })
     |> dict.values
+
   types.Model(..model, chats: chats, in_loading: False)
 }
 
@@ -132,10 +161,13 @@ fn set_timeout(_delay: Int, _cb: fn() -> a) -> Nil {
   Nil
 }
 
+pub fn tick_combined() -> Effect(types.Msg) {
+  effect.batch([scroll_to_bottom(), tick()])
+}
+
 pub fn tick() -> Effect(types.Msg) {
   use dispatch <- effect.from
   use <- set_timeout(10_000)
-
   dispatch(types.MessageRequest)
 }
 
@@ -183,4 +215,15 @@ pub fn search_username(env: String, s: String) -> Effect(types.Msg) {
   let handler = rsvp.expect_json(decoder, types.HandleUsernamesReturn)
 
   rsvp.get(url, handler)
+}
+
+pub fn scroll_to_bottom() {
+  effect.before_paint(fn(_, _) {
+    case document.get_element_by_id("chat-div") {
+      Ok(elem) -> {
+        element.set_scroll_top(elem, element.scroll_height(elem))
+      }
+      Error(_) -> Nil
+    }
+  })
 }

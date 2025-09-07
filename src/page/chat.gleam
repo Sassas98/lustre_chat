@@ -2,6 +2,7 @@ import birl
 import component/button
 import component/input
 import component/util
+import fun
 import gleam/list
 import lustre/attribute
 import lustre/element.{type Element}
@@ -38,6 +39,7 @@ pub fn chat_view(model: types.Model, to: String) -> Element(types.Msg) {
     ]),
     html.div(
       [
+        attribute.id("chat-div"),
         attribute.class(
           "bg-black w-[100%] m-2 p-4 h-64 overflow-auto rounded-lg flex flex-col gap-1",
         ),
@@ -55,9 +57,23 @@ pub fn chat_view(model: types.Model, to: String) -> Element(types.Msg) {
               ),
             ],
             [
-              html.div([attribute.class("p-2 rounded bg-white")], [
-                html.text(m.text),
-              ]),
+              html.div(
+                [
+                  attribute.class(
+                    "p-2 rounded "
+                    <> case m.read {
+                      True -> "bg-white"
+                      False -> "bg-yellow-300/70"
+                    },
+                  ),
+                ],
+                [
+                  html.div([attribute.class("text-xs text-right")], [
+                    html.text(fun.format_dt(m.time)),
+                  ]),
+                  html.div([attribute.class("text-lg")], [html.text(m.text)]),
+                ],
+              ),
             ],
           )
         }),

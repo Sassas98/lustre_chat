@@ -61,7 +61,7 @@ pub type Profile {
 }
 
 pub type Chat {
-  Chat(with: String, messages: List(Message))
+  Chat(with: String, has_new: Bool, messages: List(Message))
 }
 
 pub type Message {

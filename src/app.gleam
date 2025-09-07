@@ -73,12 +73,12 @@ fn update(
     )
     types.ChangePage(p) -> #(
       types.Model(..model, page: p, input: types.Input("", "", "", "")),
-      effect.none(),
+      fun.scroll_to_bottom(),
     )
     types.ReceiveNewMessage(Ok(msg), continue) -> #(
       fun.update_msgs(model, msg),
       case continue {
-        True -> fun.tick()
+        True -> fun.tick_combined()
         False -> effect.none()
       },
     )
@@ -95,7 +95,7 @@ fn update(
     )
     types.MessageSended(Ok(msgs)) -> #(
       fun.update_msgs(model, msgs),
-      effect.none(),
+      fun.scroll_to_bottom(),
     )
     types.HandleUsernamesReturn(Ok(list)) -> #(
       types.Model(..model, search_chat: list, in_loading: False),
@@ -152,7 +152,10 @@ fn update(
       effect.none(),
     )
     types.ErrorAccept -> #(types.Model(..model, error: ""), effect.none())
-    types.StopLoading -> #(types.Model(..model, in_loading: False), fun.tick())
+    types.StopLoading -> #(
+      types.Model(..model, in_loading: False),
+      fun.tick_combined(),
+    )
   }
 }
 
