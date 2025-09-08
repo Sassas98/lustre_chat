@@ -23,10 +23,15 @@ pub fn main() {
 }
 
 fn init(env: String) -> #(types.Model, Effect(types.Msg)) {
+  let profile = fun.get_stored_profile()
+  let page = case profile {
+    types.Unlogged -> types.LoginPage
+    _ -> types.MenuPage
+  }
   let model =
     types.Model(
-      profile: types.Unlogged,
-      page: types.LoginPage,
+      profile:,
+      page:,
       chats: [],
       search_chat: [],
       in_loading: False,
@@ -52,10 +57,10 @@ fn update(
     )
     types.LoginSubmit(Ok(p)) ->
       case p {
-        types.LoggedUser(_, _) -> #(
+        types.LoggedUser(username, token) -> #(
           types.Model(
             ..model,
-            profile: p,
+            profile: fun.set_stored_profile(username, token),
             page: types.MenuPage,
             in_loading: True,
             input: types.Input("", "", "", ""),
@@ -67,7 +72,19 @@ fn update(
           effect.none(),
         )
       }
-    types.UserLogout -> init(model.env)
+    types.UserLogout -> #(
+      types.Model(
+        profile: fun.remove_stored_profile(),
+        page: types.LoginPage,
+        chats: [],
+        search_chat: [],
+        in_loading: False,
+        input: types.Input("", "", "", ""),
+        env: model.env,
+        error: "",
+      ),
+      effect.none(),
+    )
     types.SendMessage(msg) -> #(
       types.Model(..model, in_loading: True, input: types.Input("", "", "", "")),
       fun.send_message(model.profile, model.env, msg),

@@ -1,9 +1,11 @@
 import birl
 import gleam/bool
 import gleam/dict
+import gleam/dynamic.{type Dynamic}
 import gleam/dynamic/decode
 import gleam/json
 import gleam/list
+import gleam/result
 import gleam/set
 import gleam/string
 import lustre/effect.{type Effect}
@@ -11,6 +13,50 @@ import plinth/browser/document
 import plinth/browser/element
 import rsvp
 import types
+
+@external(javascript, "./app.ffi.mjs", "get_profile")
+fn get_profile() -> Result(Dynamic, Nil) {
+  Error(Nil)
+}
+
+@external(javascript, "./app.ffi.mjs", "set_profile")
+fn set_profile(_username: String, _token: String) -> Nil {
+  Nil
+}
+
+@external(javascript, "./app.ffi.mjs", "remove_profile")
+fn remove_profile() -> Nil {
+  Nil
+}
+
+pub fn get_stored_profile() -> types.Profile {
+  let result =
+    result.try(get_profile(), fn(dyn) {
+      let decoder = {
+        use username <- decode.field("username", decode.string)
+        use token <- decode.field("token", decode.string)
+        decode.success(types.LoggedUser(username:, token:))
+      }
+      case decode.run(dyn, decoder) {
+        Ok(todos) -> Ok(todos)
+        Error(_) -> Error(Nil)
+      }
+    })
+  case result {
+    Ok(p) -> p
+    _ -> types.Unlogged
+  }
+}
+
+pub fn set_stored_profile(username: String, token: String) -> types.Profile {
+  set_profile(username, token)
+  types.LoggedUser(username:, token:)
+}
+
+pub fn remove_stored_profile() -> types.Profile {
+  remove_profile()
+  types.Unlogged
+}
 
 pub fn format_dt(dt: birl.Time) -> String {
   let iso = birl.to_iso8601(dt)
