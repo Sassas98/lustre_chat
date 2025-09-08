@@ -15,11 +15,14 @@ pub type Page {
   MenuPage
   SearchPage
   ChatPage(String)
+  EditProfile
 }
 
 pub type Msg {
   UserLogin(LoginModel)
   UserRegistration(RegistrationModel)
+  EditProfileEvent
+  EditProfileSubmit(Result(Bool, Error))
   LoginSubmit(Result(Profile, Error))
   RegistrationSubmit(Result(Bool, Error))
   UserLogout
@@ -39,6 +42,7 @@ pub type Msg {
 pub type InputType {
   InputUsername
   InputPassword
+  InputNewPassword
   InputSearch
   InputChat
   InputEmail
@@ -61,6 +65,7 @@ pub type Input {
   Input(
     username: String,
     password: String,
+    new_password: String,
     search: String,
     chat: String,
     email: String,
@@ -68,7 +73,7 @@ pub type Input {
 }
 
 pub type Profile {
-  LoggedUser(username: String, token: String)
+  LoggedUser(username: String, token: String, email: String)
   Unlogged
 }
 

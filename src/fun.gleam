@@ -20,7 +20,7 @@ fn get_profile() -> Result(Dynamic, Nil) {
 }
 
 @external(javascript, "./app.ffi.mjs", "set_profile")
-fn set_profile(_username: String, _token: String) -> Nil {
+fn set_profile(_username: String, _token: String, _email: String) -> Nil {
   Nil
 }
 
@@ -35,7 +35,8 @@ pub fn get_stored_profile() -> types.Profile {
       let decoder = {
         use username <- decode.field("username", decode.string)
         use token <- decode.field("token", decode.string)
-        decode.success(types.LoggedUser(username:, token:))
+        use email <- decode.field("email", decode.string)
+        decode.success(types.LoggedUser(username:, token:, email:))
       }
       case decode.run(dyn, decoder) {
         Ok(todos) -> Ok(todos)
@@ -48,9 +49,13 @@ pub fn get_stored_profile() -> types.Profile {
   }
 }
 
-pub fn set_stored_profile(username: String, token: String) -> types.Profile {
-  set_profile(username, token)
-  types.LoggedUser(username:, token:)
+pub fn set_stored_profile(
+  username: String,
+  token: String,
+  email: String,
+) -> types.Profile {
+  set_profile(username, token, email)
+  types.LoggedUser(username:, token:, email:)
 }
 
 pub fn remove_stored_profile() -> types.Profile {
@@ -120,8 +125,9 @@ pub fn submit_login(env: String, lm: types.LoginModel) -> Effect(types.Msg) {
     use success <- decode.field("success", decode.bool)
     use token <- decode.field("token", decode.string)
     use username <- decode.field("username", decode.string)
+    use email <- decode.field("email", decode.string)
     decode.success(case success {
-      True -> types.LoggedUser(username:, token:)
+      True -> types.LoggedUser(username:, token:, email:)
       False -> types.Unlogged
     })
   }
@@ -141,7 +147,7 @@ pub fn send_message(
       #(
         "token",
         json.string(case profile {
-          types.LoggedUser(_, token: token) -> token
+          types.LoggedUser(_, _, token: token) -> token
           _ -> ""
         }),
       ),
@@ -167,7 +173,7 @@ pub fn send_message(
 
 pub fn update_msgs(model: types.Model, msgs: List(types.Message)) -> types.Model {
   let username = case model.profile {
-    types.LoggedUser(username: user, token: _) -> user
+    types.LoggedUser(username: user, token: _, email: _) -> user
     _ -> ""
   }
   let chats =
@@ -237,7 +243,7 @@ pub fn get_messages(
     get_url(env)
     <> "get?token="
     <> case profile {
-      types.LoggedUser(_, token: token) -> token
+      types.LoggedUser(_, _, token: token) -> token
       _ -> ""
     }
     <> "&onlyNew="
@@ -247,7 +253,7 @@ pub fn get_messages(
       types.ReceiveNewMessage(msgs, only_new)
     })
   case profile {
-    types.LoggedUser(_, _) -> rsvp.get(url, handler)
+    types.LoggedUser(_, _, _) -> rsvp.get(url, handler)
     _ -> effect.from(fn(dispatch) { dispatch(types.StopLoading) })
   }
 }

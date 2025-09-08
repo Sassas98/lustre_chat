@@ -16,12 +16,18 @@ pub fn menu_view(model: types.Model) -> Element(types.Msg) {
         ),
       ],
       [
-        html.div([attribute.class("font-bold text-3xl")], [
-          html.text(case model.profile {
-            types.LoggedUser(username, _) -> "<<" <> username <> ">>"
-            _ -> ""
-          }),
-        ]),
+        html.div(
+          [
+            attribute.class("font-bold text-3xl cursor-pointer"),
+            event.on_click(types.ChangePage(types.EditProfile)),
+          ],
+          [
+            html.text(case model.profile {
+              types.LoggedUser(username, _) -> "<<" <> username <> ">>"
+              _ -> ""
+            }),
+          ],
+        ),
         html.div([attribute.class("flex flex-row gap-4")], [
           button.secondary_btn(types.UserLogout, "Logout"),
           button.primary_btn(

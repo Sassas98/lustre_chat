@@ -11,10 +11,11 @@ export function get_profile() {
   }
 }
 
-export function set_profile(username, token) {
+export function set_profile(username, token, email) {
   let json = JSON.stringify({
     username: username,
-    token: token
+    token: token,
+    email: email
   })
   window.localStorage.setItem("profile", json);
 }

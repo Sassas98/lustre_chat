@@ -9,6 +9,7 @@ import lustre/effect.{type Effect}
 import lustre/element.{type Element}
 import lustre/element/html
 import page/chat.{chat_view}
+import page/edit_profile.{edit_profile_view}
 import page/login.{login_view}
 import page/menu_page.{menu_view}
 import page/registration.{registration_view}
@@ -35,7 +36,7 @@ fn init(env: String) -> #(types.Model, Effect(types.Msg)) {
       chats: [],
       search_chat: [],
       in_loading: False,
-      input: types.Input("", "", "", "", ""),
+      input: types.Input("", "", "", "", "", ""),
       env:,
       error: "",
     )
@@ -63,7 +64,7 @@ fn update(
             profile: fun.set_stored_profile(username, token),
             page: types.MenuPage,
             in_loading: True,
-            input: types.Input("", "", "", "", ""),
+            input: types.Input("", "", "", "", "", ""),
           ),
           fun.get_messages(p, model.env, False),
         )
@@ -79,7 +80,7 @@ fn update(
         chats: [],
         search_chat: [],
         in_loading: False,
-        input: types.Input("", "", "", "", ""),
+        input: types.Input("", "", "", "", "", ""),
         env: model.env,
         error: "",
       ),
@@ -89,12 +90,12 @@ fn update(
       types.Model(
         ..model,
         in_loading: True,
-        input: types.Input("", "", "", "", ""),
+        input: types.Input("", "", "", "", "", ""),
       ),
       fun.send_message(model.profile, model.env, msg),
     )
     types.ChangePage(p) -> #(
-      types.Model(..model, page: p, input: types.Input("", "", "", "", "")),
+      types.Model(..model, page: p, input: types.Input("", "", "", "", "", "")),
       fun.scroll_to_bottom(),
     )
     types.ReceiveNewMessage(Ok(msg), continue) -> #(
@@ -150,6 +151,11 @@ fn update(
           types.Model(..model, input: types.Input(..model.input, username: s))
         types.InputEmail ->
           types.Model(..model, input: types.Input(..model.input, email: s))
+        types.InputNewPassword ->
+          types.Model(
+            ..model,
+            input: types.Input(..model.input, new_password: s),
+          )
       },
       effect.none(),
     )
@@ -157,7 +163,7 @@ fn update(
       types.Model(
         ..model,
         in_loading: False,
-        input: types.Input("", "", "", "", ""),
+        input: types.Input("", "", "", "", "", ""),
         page: types.LoginPage,
       ),
       effect.none(),
@@ -176,6 +182,27 @@ fn update(
     )
     types.RegistrationSubmit(Error(e)) -> #(
       types.Model(..model, in_loading: False, error: string.inspect(e)),
+      effect.none(),
+    )
+    types.EditProfileSubmit(Error(e)) -> #(
+      types.Model(..model, in_loading: False, error: string.inspect(e)),
+      effect.none(),
+    )
+
+    types.EditProfileSubmit(Ok(True)) -> #(
+      types.Model(
+        ..model,
+        in_loading: False,
+        profile: types.LoggedUser(
+          token: model.profile.token,
+          username: model.input.username,
+          email: model.input.email,
+        ),
+      ),
+      effect.none(),
+    )
+    types.EditProfileSubmit(Ok(False)) -> #(
+      types.Model(..model, in_loading: False, error: "Errore nel salvataggio"),
       effect.none(),
     )
     types.RegistrationSubmit(Ok(False)) -> #(
@@ -228,6 +255,7 @@ fn view(model: types.Model) -> Element(types.Msg) {
               types.ChatPage(u) -> chat_view(model, u)
               types.MenuPage -> menu_view(model)
               types.SearchPage -> search_view(model)
+              types.ChangePage -> edit_profile_view(model)
             },
           ]),
         ],
