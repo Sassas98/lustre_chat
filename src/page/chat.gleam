@@ -80,7 +80,17 @@ pub fn chat_view(model: types.Model, to: String) -> Element(types.Msg) {
         }),
     ),
     html.div([attribute.class("flex flex-row gap-1")], [
-      input.only_text_input(types.InputChat, model.input.chat),
+      input.only_text_input(
+        types.InputChat,
+        model.input.chat,
+        types.SendMessage(types.Message(
+          birl.now(),
+          model.input.chat,
+          user,
+          to,
+          False,
+        )),
+      ),
       button.primary_btn(
         types.SendMessage(types.Message(
           birl.now(),

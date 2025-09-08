@@ -14,12 +14,20 @@ pub fn login_view(model: types.Model) -> Element(types.Msg) {
       types.InputUsername,
       "md:w-[50%] md:mx-[25%]",
       model.input.username,
+      types.UserLogin(types.LoginModel(
+        model.input.username,
+        model.input.password,
+      )),
     ),
     input.password_input(
       "Password",
       types.InputPassword,
       "md:w-[50%] md:mx-[25%]",
       model.input.password,
+      types.UserLogin(types.LoginModel(
+        model.input.username,
+        model.input.password,
+      )),
     ),
     html.div([attribute.class("flex justify-between md:w-[50%] md:mx-[25%]")], [
       button.secondary_btn(types.ChangePage(types.RegisterPage), "Registrati"),

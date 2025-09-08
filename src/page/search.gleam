@@ -21,6 +21,7 @@ pub fn search_view(model: types.Model) -> Element(types.Msg) {
           types.InputSearch,
           "",
           model.input.search,
+          types.SearchUsername(model.input.search),
         ),
         button.primary_btn(types.SearchUsername(model.input.search), "Cerca"),
       ],

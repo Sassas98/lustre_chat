@@ -1,6 +1,7 @@
 import component/button
 import fun
 import gleam/bool
+import gleam/list
 import gleam/string
 import lustre
 import lustre/attribute
@@ -97,8 +98,19 @@ fn update(
       fun.update_msgs(model, msgs),
       fun.scroll_to_bottom(),
     )
-    types.HandleUsernamesReturn(Ok(list)) -> #(
-      types.Model(..model, search_chat: list, in_loading: False),
+    types.HandleUsernamesReturn(Ok(ls)) -> #(
+      types.Model(
+        ..model,
+        search_chat: ls
+          |> list.filter(fn(x) {
+            let username = case model.profile {
+              types.LoggedUser(username, _) -> username
+              _ -> ""
+            }
+            x != username
+          }),
+        in_loading: False,
+      ),
       effect.none(),
     )
     types.SearchUsername(s) -> #(
@@ -156,6 +168,7 @@ fn update(
       types.Model(..model, in_loading: False),
       fun.tick_combined(),
     )
+    types.NoneEvent -> #(model, effect.none())
   }
 }
 

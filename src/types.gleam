@@ -29,6 +29,7 @@ pub type Msg {
   InputEvent(String, InputType)
   ErrorAccept
   StopLoading
+  NoneEvent
 }
 
 pub type InputType {
