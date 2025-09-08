@@ -17,7 +17,7 @@ pub fn card(body: List(Element(types.Msg))) {
 pub fn title(text: String) {
   html.span(
     [
-      attribute.class("text-slate-800 text-6xl font-bold"),
+      attribute.class("text-slate-800 text-4xl md:text-6xl font-bold"),
     ],
     [html.text(text)],
   )
