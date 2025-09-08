@@ -15,32 +15,32 @@ pub fn edit_profile_view(model: types.Model) -> Element(types.Msg) {
       types.InputUsername,
       "md:w-[50%] md:mx-[25%]",
       model.input.username,
-      EditProfileEvent,
+      types.EditProfileEvent,
     ),
     input.text_input(
       "Email",
       types.InputEmail,
       "md:w-[50%] md:mx-[25%]",
       model.input.email,
-      EditProfileEvent,
+      types.EditProfileEvent,
     ),
     input.password_input(
       "Vecchia Password",
       types.InputPassword,
       "md:w-[50%] md:mx-[25%]",
       model.input.password,
-      EditProfileEvent,
+      types.EditProfileEvent,
     ),
     input.password_input(
       "Nuova Password",
       types.InputNewPassword,
       "md:w-[50%] md:mx-[25%]",
       model.input.new_password,
-      EditProfileEvent,
+      types.EditProfileEvent,
     ),
     html.div([attribute.class("flex justify-between md:w-[50%] md:mx-[25%]")], [
       button.secondary_btn(types.ChangePage(types.MenuPage), "Indietro"),
-      button.primary_btn(EditProfileEvent, "Salva account"),
+      button.primary_btn(types.EditProfileEvent, "Salva account"),
     ]),
   ])
 }

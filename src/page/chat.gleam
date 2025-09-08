@@ -11,7 +11,7 @@ import types
 
 pub fn chat_view(model: types.Model, to: String) -> Element(types.Msg) {
   let user = case model.profile {
-    types.LoggedUser(username, _) -> username
+    types.LoggedUser(username, _, _) -> username
     _ -> ""
   }
   let chat = case
@@ -28,7 +28,7 @@ pub fn chat_view(model: types.Model, to: String) -> Element(types.Msg) {
     html.div([attribute.class("font-bold text-xl md:text-3xl")], [
       html.text(
         case model.profile {
-          types.LoggedUser(username, _) -> "<<" <> username <> ">>"
+          types.LoggedUser(username, _, _) -> "<<" <> username <> ">>"
           _ -> ""
         }
         <> " : "
@@ -41,7 +41,7 @@ pub fn chat_view(model: types.Model, to: String) -> Element(types.Msg) {
       [
         attribute.id("chat-div"),
         attribute.class(
-          "bg-black w-[100%] m-2 p-4 h-[50vh] overflow-auto rounded-lg flex flex-col gap-1",
+          "bg-[url('/chat.svg')] bg-no-repeat bg-center bg-cover w-[100%] md:m-2 p-4 h-[50vh] overflow-auto rounded-lg flex flex-col gap-1",
         ),
       ],
       chat
@@ -62,9 +62,9 @@ pub fn chat_view(model: types.Model, to: String) -> Element(types.Msg) {
                   attribute.class(
                     "p-2 rounded "
                     <> case m.read, m.from == to {
-                      _, False -> "bg-white"
-                      False, True -> "bg-yellow-300/70"
-                      True, True -> "bg-sky-300/70"
+                      _, False -> "bg-white/70"
+                      False, True -> "bg-orange-300/70"
+                      True, True -> "bg-violet-300/70"
                     },
                   ),
                 ],

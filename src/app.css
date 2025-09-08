@@ -28,3 +28,4 @@
     90%,
     100%  {transform:translateY(calc(var(--s,1)*0));  background-position: 0 calc(var(--s,0)*-100%),calc(var(--s,0)*100% + 100%) 50%}
 }
+

@@ -29,6 +29,12 @@ fn init(env: String) -> #(types.Model, Effect(types.Msg)) {
     types.Unlogged -> types.LoginPage
     _ -> types.MenuPage
   }
+  let f = case profile {
+    types.Unlogged -> fun.tick
+    _ -> fn() {
+      [fun.get_messages(profile, env, False), fun.tick()] |> effect.batch()
+    }
+  }
   let model =
     types.Model(
       profile:,
@@ -40,7 +46,7 @@ fn init(env: String) -> #(types.Model, Effect(types.Msg)) {
       env:,
       error: "",
     )
-  #(model, fun.tick())
+  #(model, f())
 }
 
 fn update(
@@ -48,6 +54,10 @@ fn update(
   msg: types.Msg,
 ) -> #(types.Model, Effect(types.Msg)) {
   case msg {
+    types.EditProfileEvent -> #(
+      types.Model(..model, in_loading: True),
+      fun.edit_profile(model),
+    )
     types.UserRegistration(m) -> #(
       types.Model(..model, in_loading: True),
       fun.submit_registration(model.env, m),
@@ -58,10 +68,10 @@ fn update(
     )
     types.LoginSubmit(Ok(p)) ->
       case p {
-        types.LoggedUser(username, token) -> #(
+        types.LoggedUser(username, token, email) -> #(
           types.Model(
             ..model,
-            profile: fun.set_stored_profile(username, token),
+            profile: fun.set_stored_profile(username, token, email),
             page: types.MenuPage,
             in_loading: True,
             input: types.Input("", "", "", "", "", ""),
@@ -95,7 +105,15 @@ fn update(
       fun.send_message(model.profile, model.env, msg),
     )
     types.ChangePage(p) -> #(
-      types.Model(..model, page: p, input: types.Input("", "", "", "", "", "")),
+      types.Model(..model, page: p, input: case p {
+        types.EditProfile ->
+          types.Input(
+            ..model.input,
+            username: model.profile |> fun.get_username,
+            email: model.profile |> fun.get_email,
+          )
+        _ -> types.Input("", "", "", "", "", "")
+      }),
       fun.scroll_to_bottom(),
     )
     types.ReceiveNewMessage(Ok(msg), continue) -> #(
@@ -125,10 +143,7 @@ fn update(
         ..model,
         search_chat: ls
           |> list.filter(fn(x) {
-            let username = case model.profile {
-              types.LoggedUser(username, _) -> username
-              _ -> ""
-            }
+            let username = model.profile |> fun.get_username()
             x != username
           }),
         in_loading: False,
@@ -194,12 +209,20 @@ fn update(
         ..model,
         in_loading: False,
         profile: types.LoggedUser(
-          token: model.profile.token,
+          token: model.profile |> fun.get_token(),
           username: model.input.username,
           email: model.input.email,
         ),
+        page: types.MenuPage,
       ),
-      effect.none(),
+      effect.from(fn(dispatch) {
+        fun.set_stored_profile(
+          model.input.username,
+          model.profile |> fun.get_token,
+          model.input.email,
+        )
+        types.NoneEvent |> dispatch
+      }),
     )
     types.EditProfileSubmit(Ok(False)) -> #(
       types.Model(..model, in_loading: False, error: "Errore nel salvataggio"),
@@ -228,7 +251,7 @@ fn view(model: types.Model) -> Element(types.Msg) {
       html.div(
         [
           attribute.class(
-            "bg-gradient-to-b from-slate-500 to-slate-800 text-white h-[100vh] overflow-auto flex justify-center font-mono",
+            "text-white h-[100vh] overflow-auto flex justify-center md:pt-24 font-mono bg-[url('/bg.svg')] bg-no-repeat bg-center bg-cover",
           ),
         ],
         [
@@ -255,7 +278,7 @@ fn view(model: types.Model) -> Element(types.Msg) {
               types.ChatPage(u) -> chat_view(model, u)
               types.MenuPage -> menu_view(model)
               types.SearchPage -> search_view(model)
-              types.ChangePage -> edit_profile_view(model)
+              types.EditProfile -> edit_profile_view(model)
             },
           ]),
         ],
