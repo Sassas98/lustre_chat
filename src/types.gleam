@@ -5,6 +5,10 @@ pub type LoginModel {
   LoginModel(username: String, password: String)
 }
 
+pub type RegistrationModel {
+  RegistrationModel(username: String, password: String, email: String)
+}
+
 pub type Page {
   LoginPage
   RegisterPage
@@ -15,7 +19,7 @@ pub type Page {
 
 pub type Msg {
   UserLogin(LoginModel)
-  UserRegistration(LoginModel)
+  UserRegistration(RegistrationModel)
   LoginSubmit(Result(Profile, Error))
   RegistrationSubmit(Result(Bool, Error))
   UserLogout
@@ -37,6 +41,7 @@ pub type InputType {
   InputPassword
   InputSearch
   InputChat
+  InputEmail
 }
 
 pub type Model {
@@ -53,7 +58,13 @@ pub type Model {
 }
 
 pub type Input {
-  Input(username: String, password: String, search: String, chat: String)
+  Input(
+    username: String,
+    password: String,
+    search: String,
+    chat: String,
+    email: String,
+  )
 }
 
 pub type Profile {

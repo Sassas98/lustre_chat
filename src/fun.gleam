@@ -86,12 +86,13 @@ fn get_url(env: String) {
 
 pub fn submit_registration(
   env: String,
-  lm: types.LoginModel,
+  lm: types.RegistrationModel,
 ) -> Effect(types.Msg) {
   let body =
     json.object([
       #("username", json.string(lm.username)),
       #("password", json.string(lm.password)),
+      #("email", json.string(lm.email)),
     ])
 
   let url = get_url(env) <> "registration"

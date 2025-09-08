@@ -35,7 +35,7 @@ fn init(env: String) -> #(types.Model, Effect(types.Msg)) {
       chats: [],
       search_chat: [],
       in_loading: False,
-      input: types.Input("", "", "", ""),
+      input: types.Input("", "", "", "", ""),
       env:,
       error: "",
     )
@@ -63,7 +63,7 @@ fn update(
             profile: fun.set_stored_profile(username, token),
             page: types.MenuPage,
             in_loading: True,
-            input: types.Input("", "", "", ""),
+            input: types.Input("", "", "", "", ""),
           ),
           fun.get_messages(p, model.env, False),
         )
@@ -79,18 +79,22 @@ fn update(
         chats: [],
         search_chat: [],
         in_loading: False,
-        input: types.Input("", "", "", ""),
+        input: types.Input("", "", "", "", ""),
         env: model.env,
         error: "",
       ),
       effect.none(),
     )
     types.SendMessage(msg) -> #(
-      types.Model(..model, in_loading: True, input: types.Input("", "", "", "")),
+      types.Model(
+        ..model,
+        in_loading: True,
+        input: types.Input("", "", "", "", ""),
+      ),
       fun.send_message(model.profile, model.env, msg),
     )
     types.ChangePage(p) -> #(
-      types.Model(..model, page: p, input: types.Input("", "", "", "")),
+      types.Model(..model, page: p, input: types.Input("", "", "", "", "")),
       fun.scroll_to_bottom(),
     )
     types.ReceiveNewMessage(Ok(msg), continue) -> #(
@@ -144,6 +148,8 @@ fn update(
           types.Model(..model, input: types.Input(..model.input, search: s))
         types.InputUsername ->
           types.Model(..model, input: types.Input(..model.input, username: s))
+        types.InputEmail ->
+          types.Model(..model, input: types.Input(..model.input, email: s))
       },
       effect.none(),
     )
@@ -151,7 +157,7 @@ fn update(
       types.Model(
         ..model,
         in_loading: False,
-        input: types.Input("", "", "", ""),
+        input: types.Input("", "", "", "", ""),
         page: types.LoginPage,
       ),
       effect.none(),
