@@ -31,12 +31,12 @@ export function set_timeout(delay, cb) {
 export async function wireImageUploader(id, upload_url) {
   const input = document.getElementById(id);
   if (!input) {
-    return "input not found";
+    return "";
   }
 
   const file = input.files?.[0];
   if (!file) {
-    return "no file selected";
+    return "";
   }
 
   const formData = new FormData();
@@ -50,13 +50,13 @@ export async function wireImageUploader(id, upload_url) {
     });
 
     if (!res.ok) {
-      return "upload failed: " + res.statusText;
+      return "";
     }
 
     const data = await res.json().catch(() => null);
 
     return data?.ascii
   } catch (err) {
-    return "network error: " + err.message;
+    return "";
   }
 }
