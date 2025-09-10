@@ -27,3 +27,36 @@ export function remove_profile() {
 export function set_timeout(delay, cb) {
   window.setTimeout(cb, delay);
 }
+
+export async function wireImageUploader(id, upload_url) {
+  const input = document.getElementById(id);
+  if (!input) {
+    return "input not found";
+  }
+
+  const file = input.files?.[0];
+  if (!file) {
+    return "no file selected";
+  }
+
+  const formData = new FormData();
+  formData.append("image", file);
+  console.log(file)
+
+  try {
+    const res = await fetch(upload_url, {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!res.ok) {
+      return "upload failed: " + res.statusText;
+    }
+
+    const data = await res.json().catch(() => null);
+
+    return data?.ascii
+  } catch (err) {
+    return "network error: " + err.message;
+  }
+}

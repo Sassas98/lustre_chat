@@ -24,7 +24,7 @@ pub type Msg {
   EditProfileEvent
   EditProfileSubmit(Result(Bool, Error))
   LoadPictureEvent
-  LoadProfileSubmit(Result(String, Error))
+  LoadPictureSubmit(String)
   LoginSubmit(Result(Profile, Error))
   RegistrationSubmit(Result(Bool, Error))
   UserLogout

@@ -3,6 +3,7 @@ import gleam/bool
 import gleam/dict
 import gleam/dynamic.{type Dynamic}
 import gleam/dynamic/decode
+import gleam/javascript/promise.{type Promise}
 import gleam/json
 import gleam/list
 import gleam/result
@@ -208,6 +209,24 @@ pub fn update_msgs(model: types.Model, msgs: List(types.Message)) -> types.Model
 @external(javascript, "./app.ffi.mjs", "set_timeout")
 fn set_timeout(_delay: Int, _cb: fn() -> a) -> Nil {
   Nil
+}
+
+@external(javascript, "./app.ffi.mjs", "wireImageUploader")
+fn wire_image_upload(_id: String, _upload_url: String) -> Promise(String) {
+  promise.resolve("")
+}
+
+pub fn ascii_conv(model: types.Model) -> Effect(types.Msg) {
+  effect.from(fn(dispatch) {
+    promise.await(
+      wire_image_upload("input_file", get_url(model.env) <> "ascii"),
+      fn(ascii) {
+        dispatch(types.LoadPictureSubmit(ascii))
+        promise.resolve(Nil)
+      },
+    )
+    Nil
+  })
 }
 
 pub fn tick_combined() -> Effect(types.Msg) {

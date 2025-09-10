@@ -55,19 +55,15 @@ fn update(
 ) -> #(types.Model, Effect(types.Msg)) {
   case msg {
     types.LoadPictureEvent -> #(
-      types.Model(..model, in_loading: True, error: string.inspect(e)),
-      effect.none(),
+      types.Model(..model, in_loading: True),
+      fun.ascii_conv(model),
     )
-    types.LoadProfileSubmit(Ok(s)) -> #(
+    types.LoadPictureSubmit(s) -> #(
       types.Model(
         ..model,
         in_loading: False,
         input: types.Input(..model.input, chat: s),
       ),
-      effect.none(),
-    )
-    types.LoadProfileSubmit(Error(e)) -> #(
-      types.Model(..model, in_loading: False, error: string.inspect(e)),
       effect.none(),
     )
     types.EditProfileEvent -> #(
