@@ -131,7 +131,11 @@ fn update(
     types.ReceiveNewMessage(Ok(msg), continue) -> #(
       fun.update_msgs(model, msg),
       case continue {
-        True -> fun.tick_combined()
+        True ->
+          case msg |> list.length {
+            0 -> fun.tick()
+            _ -> fun.tick_combined()
+          }
         False -> effect.none()
       },
     )
