@@ -23,6 +23,8 @@ pub type Msg {
   UserRegistration(RegistrationModel)
   EditProfileEvent
   EditProfileSubmit(Result(Bool, Error))
+  LoadPictureEvent
+  LoadProfileSubmit(Result(String, Error))
   LoginSubmit(Result(Profile, Error))
   RegistrationSubmit(Result(Bool, Error))
   UserLogout
