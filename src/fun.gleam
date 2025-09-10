@@ -172,10 +172,7 @@ pub fn send_message(
 }
 
 pub fn update_msgs(model: types.Model, msgs: List(types.Message)) -> types.Model {
-  let username = case model.profile {
-    types.LoggedUser(username: user, token: _, email: _) -> user
-    _ -> ""
-  }
+  let username = model.profile |> get_username()
   let chats =
     msgs
     |> list.group(fn(m) {
@@ -278,4 +275,47 @@ pub fn scroll_to_bottom() {
       Error(_) -> Nil
     }
   })
+}
+
+pub fn get_username(p: types.Profile) -> String {
+  case p {
+    types.LoggedUser(u, _, _) -> u
+    _ -> ""
+  }
+}
+
+pub fn get_token(p: types.Profile) -> String {
+  case p {
+    types.LoggedUser(_, t, _) -> t
+    _ -> ""
+  }
+}
+
+pub fn get_email(p: types.Profile) -> String {
+  case p {
+    types.LoggedUser(_, _, e) -> e
+    _ -> ""
+  }
+}
+
+pub fn edit_profile(m: types.Model) -> Effect(types.Msg) {
+  let body =
+    json.object([
+      #("token", m.profile |> get_token() |> json.string()),
+      #("username", m.input.username |> json.string()),
+      #("email", m.input.email |> json.string()),
+      #("password", m.input.password |> json.string()),
+      #("new_password", m.input.new_password |> json.string()),
+    ])
+
+  let url = get_url(m.env) <> "edit"
+
+  let decoder = {
+    use success <- decode.field("success", decode.bool)
+    decode.success(success)
+  }
+
+  let handler = rsvp.expect_json(decoder, types.EditProfileSubmit)
+
+  rsvp.post(url, body, handler)
 }

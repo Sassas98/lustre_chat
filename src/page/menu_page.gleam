@@ -18,12 +18,14 @@ pub fn menu_view(model: types.Model) -> Element(types.Msg) {
       [
         html.div(
           [
-            attribute.class("font-bold text-3xl cursor-pointer"),
+            attribute.class(
+              "font-bold text-3xl cursor-pointer hover:text-violet-800 transition-all duration-200 ease-in",
+            ),
             event.on_click(types.ChangePage(types.EditProfile)),
           ],
           [
             html.text(case model.profile {
-              types.LoggedUser(username, _) -> "<<" <> username <> ">>"
+              types.LoggedUser(username, _, _) -> "<<" <> username <> ">>"
               _ -> ""
             }),
           ],
