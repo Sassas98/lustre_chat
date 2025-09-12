@@ -3,6 +3,7 @@ import component/button
 import component/input
 import component/util
 import fun
+import gleam/int
 import gleam/list
 import gleam/string
 import lustre/attribute
@@ -81,7 +82,7 @@ pub fn chat_view(model: types.Model, to: String) -> Element(types.Msg) {
                         1 -> "text-base md:text-lg"
                         2 -> "text-sm md:text-base"
                         3 -> "text-xs md:text-sm"
-                        _ -> "text-[8px] md:text-xs"
+                        _ -> "text-[4px] md:text-[8px]"
                       }),
                     ],
                     m.text
